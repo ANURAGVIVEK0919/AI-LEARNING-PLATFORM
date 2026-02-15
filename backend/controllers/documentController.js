@@ -1,7 +1,6 @@
 import Document from '../models/Document.js';
 import Flashcard from '../models/Flashcard.js';
 import Quiz from '../models/Quiz.js';
-import { extractTextFromPDF } from '../utils/pdfParser.js';
 import { chunkText } from '../utils/textChunker.js';
 import fs from 'fs/promises';
 import mongoose from 'mongoose';
@@ -67,6 +66,8 @@ export const uploadDocument = async (req, res, next) => {
 // Helper function to process PDF
 const processPDF = async (documentId, filePath) => {
   try {
+    // Dynamic import to avoid cold start issues
+    const { extractTextFromPDF } = await import('../utils/pdfParser.js');
     const { text } = await extractTextFromPDF(filePath);
     
     // Create chunks

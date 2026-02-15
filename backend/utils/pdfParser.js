@@ -1,5 +1,4 @@
 import fs from "fs/promises";
-import { PDFParse } from "pdf-parse";
 
 /**
  * Extract text from PDF file
@@ -8,10 +7,11 @@ import { PDFParse } from "pdf-parse";
  */
 export const extractTextFromPDF = async (filePath) => {
   try {
+    // Dynamic import to avoid loading in serverless cold start
+    const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
+    
     const dataBuffer = await fs.readFile(filePath);
-    // pdf-parse expects a Uint8Array, not a Buffer
-    const parser = new PDFParse(new Uint8Array(dataBuffer));
-    const data = await parser.getText();
+    const data = await pdfParse(dataBuffer);
 
     return {
       text: data.text,
@@ -20,7 +20,14 @@ export const extractTextFromPDF = async (filePath) => {
     };
   } catch (error) {
     console.error("PDF parsing error:", error);
-    throw new Error("Failed to extract text from PDF");
+    
+    // If pdf-parse fails in serverless, provide helpful error
+    if (error.message?.includes('DOMMatrix') || error.message?.includes('canvas')) {
+      throw new Error('PDF parsing is not supported in serverless environment. Please use a different deployment method or external service.');
+    }
+    
+    throw new Error(`Failed to extract text from PDF: ${error.message}`);
   }
 };
+
 
