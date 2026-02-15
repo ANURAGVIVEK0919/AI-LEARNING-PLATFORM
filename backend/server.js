@@ -23,8 +23,8 @@ const __dirname = path.dirname(__filename);
 // Initialize express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (async, will be handled per request in serverless)
+connectDB().catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware to handle CORS
 app.use(
@@ -39,9 +39,39 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware to ensure DB connection (important for serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      error: 'Database connection failed',
+      message: error.message
+    });
+  }
+});
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'AI Learning Platform API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working',
+    endpoints: ['/api/auth', '/api/documents', '/api/flashcards', '/api/ai', '/api/quizzes', '/api/progress']
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes)
