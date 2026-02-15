@@ -1,4 +1,20 @@
-export const BASE_URL = "http://localhost:8000";
+// Determine base URL based on environment
+const getBaseURL = () => {
+  // Check if VITE_API_URL is set (for Netlify environment variables)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Development: use localhost
+  if (import.meta.env.DEV) {
+    return "http://localhost:8000";
+  }
+  
+  // Production: use Vercel backend
+  return "https://ai-learning-platform-lac.vercel.app";
+};
+
+export const BASE_URL = getBaseURL();
 
 export const API_PATHS = {
   AUTH: {
