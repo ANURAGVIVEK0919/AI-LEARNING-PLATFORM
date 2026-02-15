@@ -63,13 +63,18 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+// Export for Vercel serverless functions
+export default app;
 
-process.on('unhandledRejection', (err) => {
-  console.error(`Error: ${err.message}`);
-  process.exit(1);
-});
+// Start server (only for local development)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  });
+
+  process.on('unhandledRejection', (err) => {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  });
+}
